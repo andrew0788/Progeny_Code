@@ -6,9 +6,15 @@
   </head>
   <body>
     <!-- <script src='./signup.html'></script> -->
+    <h1>sign up</h1>
     <input type="text" id="signupEmail" value="email">
     <input type="text" id="signupPassword" value="password">
     <button type="button" id="signupButton" onclick="handleSignUp()"></button>
+    <h1>Sign In</h1>
+    <input type="text" id="signInEmail" value="email">
+    <input type="text" id="signInPassword" value="password">
+    <button type="button" id="signInButton" onclick="handleSignIn()">Sign In</button>
+    <button type="button" id="billing-portal-button" >Edit subscriptions</button>
         <!-- <script type="text/javascript"> -->
         <!-- The core Firebase JS SDK is always required and must be listed first -->
       <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
@@ -16,33 +22,32 @@
       <!-- TODO: Add SDKs for Firebase products that you want to use
          https://firebase.google.com/docs/web/setup#available-libraries -->
       <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/7.21.0/firebase-functions.js"></script>
 
       <script>
       // Your web app's Firebase configuration
       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-      var firebaseConfig = {
-        apiKey: 
-        authDomain:
-        databaseURL:
-        projectId:
-        storageBucket:
-        messagingSenderId:
-        appId:
-        measurementId:
-      };
-      // Initialize Firebase
 
+
+
+
+      // Initialize Firebase
+      //
+      // const firebase = require("firebase");
+      // // Required for side-effects
+      // const firebaseFunctions = require("firebase/functions");
       firebase.initializeApp(firebaseConfig);
 
 
       //  Handles the sign up button press.
       function handleSignUp() {
-        var email = document.getElementById('signupEmail').value;
-        var password = document.getElementById('signupPassword').value;
+        let email = document.getElementById('signupEmail').value;
+        let password = document.getElementById('signupPassword').value;
         if (email.length < 4) {
           alert('Please enter an email address.');
           return;
         }
+        // TODO: add more securrity to password
         if (password.length < 4) {
           alert('Please enter a password.');
           return;
@@ -50,8 +55,8 @@
         // Create user with email and pass.
         firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
           // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
+          let errorCode = error.code;
+          let errorMessage = error.message;
           if (errorCode == 'auth/weak-password') {
             alert('The password is too weak.');
           } else {
@@ -59,7 +64,31 @@
           }
           console.log(error);
         });
-      }
+      };
+
+      function handleSignIn() {
+        let email = document.getElementById('signInEmail').value;
+        let password = document.getElementById('signInPassword').value;
+        firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+          // Handle Errors here.
+          let errorCode = error.code;
+          let errorMessage = error.message;
+        })
+      };
+
+      document
+        .querySelector('#billing-portal-button')
+        .addEventListener('click', async (event) => {
+          document.querySelectorAll('button').forEach((b) => (b.disabled = true));
+
+          // Call billing portal function
+          const functionRef = firebase
+            .app()
+            .functions('us-central1')
+            .httpsCallable('ext-firestore-stripe-subscriptions-createPortalLink');
+          const { data } = await functionRef({ returnUrl: 'https://www.progenycoffee.com/' });
+          window.location.assign(data.url);
+        });
     </script>
   </body>
 </html>
